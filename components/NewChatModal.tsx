@@ -12,18 +12,26 @@ interface NewChatModalProps {
 }
 
 export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChatModalProps) {
+  const [mode, setMode] = useState<'direct' | 'group'>('direct');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<User[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [groupName, setGroupName] = useState('');
+  
   const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
 
   const debouncedQuery = useDebounce(query, 300);
 
+  // Reset state when modal opens/closes
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setMode('direct');
       setQuery('');
       setResults([]);
+      setSelectedUsers([]);
+      setGroupName('');
       setError('');
     }
   }, [isOpen]);
@@ -50,15 +58,53 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
     searchUsers();
   }, [debouncedQuery]);
 
-  const handleStartChat = async (user: User) => {
+  const handleSelectUser = async (user: User) => {
+    if (mode === 'direct') {
+      setIsCreating(true);
+      setError('');
+      try {
+        const conversation = await api.startConversation({ userId: user._id });
+        onConversationCreated(conversation);
+        onClose();
+      } catch (err) {
+        setError('Failed to start conversation.');
+      } finally {
+        setIsCreating(false);
+      }
+    } else {
+      // Group mode: toggle selection
+      if (!selectedUsers.find((u) => u._id === user._id)) {
+        setSelectedUsers([...selectedUsers, user]);
+      }
+      setQuery(''); // clear query after selection to easily see selections
+    }
+  };
+
+  const handleRemoveUser = (userId: string) => {
+    setSelectedUsers(selectedUsers.filter((u) => u._id !== userId));
+  };
+
+  const handleCreateGroup = async () => {
+    if (selectedUsers.length < 2) {
+      setError('Please select at least 2 members for the group.');
+      return;
+    }
+    if (!groupName.trim()) {
+      setError('Group name is required.');
+      return;
+    }
+
     setIsCreating(true);
     setError('');
     try {
-      const conversation = await api.startConversation({ userId: user.id });
+      const conversation = await api.createGroup({
+        name: groupName.trim(),
+        memberIds: selectedUsers.map((u) => u._id),
+      });
       onConversationCreated(conversation);
       onClose();
     } catch (err) {
-      setError('Failed to start conversation.');
+      setError('Failed to create group.');
     } finally {
       setIsCreating(false);
     }
@@ -81,6 +127,60 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
             </svg>
           </button>
         </div>
+
+        {/* Mode Toggle */}
+        <div className="flex p-4 border-b border-gray-700 bg-gray-900/50">
+          <div className="flex bg-gray-800 p-1 rounded-lg w-full">
+            <button
+              onClick={() => {
+                setMode('direct');
+                setSelectedUsers([]);
+                setGroupName('');
+                setError('');
+              }}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition ${mode === 'direct' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              Direct Message
+            </button>
+            <button
+              onClick={() => {
+                setMode('group');
+                setError('');
+              }}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition ${mode === 'group' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              Group Chat
+            </button>
+          </div>
+        </div>
+
+        {/* Group Info Input */}
+        {mode === 'group' && (
+          <div className="p-4 border-b border-gray-700">
+            <input
+              type="text"
+              placeholder="Group Name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            />
+            {selectedUsers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedUsers.map(user => (
+                  <div key={user._id} className="flex items-center bg-gray-700 px-3 py-1 rounded-full text-sm text-gray-200">
+                    <span>{user.name}</span>
+                    <button
+                      onClick={() => handleRemoveUser(user._id)}
+                      className="ml-2 text-gray-400 hover:text-red-400 focus:outline-none"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="p-4 border-b border-gray-700 bg-gray-900/50">
           <input
@@ -114,24 +214,48 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
           )}
 
           <div className="space-y-2">
-            {results.map((user) => (
-              <button
-                key={user.id}
-                disabled={isCreating}
-                onClick={() => handleStartChat(user)}
-                className="w-full flex items-center p-3 hover:bg-gray-700 rounded-lg transition disabled:opacity-50 text-left"
-              >
-                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="ml-3 flex-1 overflow-hidden">
-                  <p className="text-white font-medium truncate">{user.name}</p>
-                  <p className="text-gray-400 text-sm truncate">{user.phone}</p>
-                </div>
-              </button>
-            ))}
+            {results.map((user) => {
+              const isSelected = selectedUsers.some(u => u._id === user._id);
+              if (mode === 'group' && isSelected) return null; // hide already selected users from results
+
+              return (
+                <button
+                  key={user._id}
+                  disabled={isCreating}
+                  onClick={() => handleSelectUser(user)}
+                  className="w-full flex items-center p-3 hover:bg-gray-700 rounded-lg transition disabled:opacity-50 text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="ml-3 flex-1 overflow-hidden">
+                    <p className="text-white font-medium truncate">{user.name}</p>
+                    <p className="text-gray-400 text-sm truncate">{user.phone}</p>
+                  </div>
+                  {mode === 'group' && (
+                    <div className="ml-3 text-blue-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        {mode === 'group' && (
+          <div className="p-4 border-t border-gray-700 bg-gray-900/50">
+            <button
+              onClick={handleCreateGroup}
+              disabled={isCreating || selectedUsers.length < 2 || !groupName.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition flex justify-center items-center"
+            >
+              {isCreating ? 'Creating Group...' : `Create Group (${selectedUsers.length + 1})`}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

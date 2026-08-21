@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   phone: string;
   avatar?: string;
@@ -7,23 +7,24 @@ export interface User {
 }
 
 export interface Message {
-  id: string;
+  _id: string;
   conversationId: string;
-  senderId: string;
+  senderId?: string;
+  sender?: string | User;
   text: string;
   createdAt: string;
-  sender?: User;
 }
 
 export interface Conversation {
-  id: string;
+  _id: string;
+  type: 'direct' | 'group';
   name?: string | null;
-  isGroup: boolean;
-  participantIds: string[];
-  participants?: User[];
-  adminIds?: string[];
-  lastMessage?: Message;
-  createdAt: string;
+  participant?: User; // For direct chats
+  participants?: User[]; // For group chats
+  admins?: string[];
+  createdBy?: string;
+  lastMessage?: Partial<Message>;
+  createdAt?: string;
   updatedAt: string;
 }
 

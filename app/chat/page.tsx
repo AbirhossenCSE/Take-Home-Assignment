@@ -6,6 +6,7 @@ import { useAuthStore, useChatStore } from '@/store';
 import { api } from '@/lib/api';
 import { Conversation, User } from '@/types';
 import { NewChatModal } from '@/components/NewChatModal';
+import { GroupInfoModal } from '@/components/GroupInfoModal';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,9 +35,16 @@ export default function ChatPage() {
     setError('');
     try {
       const data = await api.getConversations();
-      setConversations(data);
+      // Ensure conversations is an array
+      if (Array.isArray(data)) {
+        setConversations(data);
+      } else {
+        setConversations([]);
+        console.error("API returned non-array for conversations", data);
+      }
     } catch (err) {
       setError('Failed to load conversations.');
+      setConversations([]);
     } finally {
       setIsLoading(false);
     }
@@ -49,18 +58,41 @@ export default function ChatPage() {
 
   const handleConversationCreated = (newConv: Conversation) => {
     setConversations((prev) => {
-      // Avoid duplicates just in case
-      if (prev.find(c => c.id === newConv.id)) return prev;
+      if (!Array.isArray(prev)) return [newConv];
+      if (prev.find(c => c._id === newConv._id)) return prev;
       return [newConv, ...prev];
     });
     setActiveConversation(newConv);
   };
 
+  const handleConversationUpdated = (updatedConv: Conversation) => {
+    setConversations((prev) => {
+      if (!Array.isArray(prev)) return [updatedConv];
+      return prev.map(c => c._id === updatedConv._id ? updatedConv : c);
+    });
+    if (activeConversation?._id === updatedConv._id) {
+      setActiveConversation(updatedConv);
+    }
+  };
+
+  const handleLeaveGroup = () => {
+    setConversations((prev) => {
+      if (!Array.isArray(prev)) return [];
+      return prev.filter(c => c._id !== activeConversation?._id);
+    });
+    setActiveConversation(null);
+    setIsGroupInfoOpen(false);
+  };
+
   const getConversationName = (conv: Conversation) => {
-    if (conv.isGroup) return conv.name || 'Unnamed Group';
+    if (conv.type === 'group') return conv.name || 'Unnamed Group';
     if (!currentUser) return 'Unknown';
-    // For direct chat, find the other participant
-    const otherUser = conv.participants?.find((p) => p.id !== currentUser.id);
+    // For direct chat, backend provides it in `participant`
+    if (conv.type === 'direct' && conv.participant) {
+      return conv.participant.name;
+    }
+    // Fallback if participants array is used
+    const otherUser = conv.participants?.find((p) => p._id !== currentUser._id);
     return otherUser ? otherUser.name : 'Unknown User';
   };
 
@@ -74,6 +106,9 @@ export default function ChatPage() {
       </div>
     );
   }
+
+  // Double check `conversations` is an array during render in case state got corrupted
+  const safeConversations = Array.isArray(conversations) ? conversations : [];
 
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
@@ -119,20 +154,20 @@ export default function ChatPage() {
             </div>
           )}
 
-          {!isLoading && !error && conversations.length === 0 && (
+          {!isLoading && !error && safeConversations.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               <p>No conversations yet.</p>
               <p className="text-sm mt-2">Search for someone to start chatting!</p>
             </div>
           )}
 
-          {!isLoading && !error && conversations.map((conv) => {
-            const isActive = activeConversation?.id === conv.id;
+          {!isLoading && !error && safeConversations.map((conv) => {
+            const isActive = activeConversation?._id === conv._id;
             const name = getConversationName(conv);
             
             return (
               <button
-                key={conv.id}
+                key={conv._id}
                 onClick={() => setActiveConversation(conv)}
                 className={`w-full text-left p-4 border-b border-gray-800/50 hover:bg-gray-800 transition flex items-center ${isActive ? 'bg-gray-800' : ''}`}
               >
@@ -142,7 +177,7 @@ export default function ChatPage() {
                 <div className="ml-4 flex-1 overflow-hidden">
                   <h3 className="font-semibold text-white truncate">{name}</h3>
                   <p className="text-sm text-gray-400 truncate mt-1">
-                    {conv.lastMessage?.text || 'No messages yet'}
+                    {(conv.lastMessage as any)?.text || 'No messages yet'}
                   </p>
                 </div>
               </button>
@@ -166,8 +201,37 @@ export default function ChatPage() {
       {/* RIGHT PANEL */}
       <div className="flex-1 flex flex-col bg-gray-900 relative">
         {activeConversation ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Active conversation: {getConversationName(activeConversation)}</p>
+          <div className="flex-1 flex flex-col">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/95">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-bold">
+                  {getConversationName(activeConversation).charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="font-semibold text-lg">{getConversationName(activeConversation)}</h2>
+                  {activeConversation.type === 'group' && (
+                    <p className="text-xs text-gray-400">{activeConversation.participants?.length || 0} members</p>
+                  )}
+                </div>
+              </div>
+              {activeConversation.type === 'group' && (
+                <button 
+                  onClick={() => setIsGroupInfoOpen(true)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition"
+                  title="Group Info"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            {/* Messages Placeholder */}
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-gray-500">Messages will appear here...</p>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
@@ -187,6 +251,16 @@ export default function ChatPage() {
         onClose={() => setIsNewChatOpen(false)} 
         onConversationCreated={handleConversationCreated}
       />
+
+      {activeConversation && activeConversation.type === 'group' && (
+        <GroupInfoModal 
+          conversation={activeConversation}
+          isOpen={isGroupInfoOpen}
+          onClose={() => setIsGroupInfoOpen(false)}
+          onConversationUpdated={handleConversationUpdated}
+          onLeave={handleLeaveGroup}
+        />
+      )}
     </div>
   );
 }

@@ -47,8 +47,12 @@ export const api = {
 
   // Conversations
   getConversations: async () => {
-    const response = await apiClient.get<Conversation[]>('/conversations');
-    return response.data;
+    const response = await apiClient.get<Conversation[] | { data: Conversation[] }>('/conversations');
+    const responseData = response.data;
+    if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+      return Array.isArray(responseData.data) ? responseData.data : [];
+    }
+    return Array.isArray(responseData) ? responseData : [];
   },
   startConversation: async (data: CreateConversationRequest) => {
     const response = await apiClient.post<Conversation>('/conversations', data);
