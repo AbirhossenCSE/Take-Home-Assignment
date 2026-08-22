@@ -48,7 +48,7 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
       try {
         const users = await api.searchUsers(debouncedQuery.trim());
         setResults(users);
-      } catch (err) {
+      } catch {
         setError('Failed to search users. Please try again.');
       } finally {
         setIsSearching(false);
@@ -66,7 +66,7 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
         const conversation = await api.startConversation({ userId: user._id });
         onConversationCreated(conversation);
         onClose();
-      } catch (err) {
+      } catch {
         setError('Failed to start conversation.');
       } finally {
         setIsCreating(false);
@@ -103,7 +103,7 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
       });
       onConversationCreated(conversation);
       onClose();
-    } catch (err) {
+    } catch {
       setError('Failed to create group.');
     } finally {
       setIsCreating(false);

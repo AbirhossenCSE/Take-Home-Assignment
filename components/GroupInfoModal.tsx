@@ -50,7 +50,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
       try {
         const users = await api.searchUsers(debouncedSearchQuery.trim());
         setSearchResults(users);
-      } catch (err) {
+      } catch {
         // quiet fail
       }
     }
@@ -73,7 +73,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
       onConversationUpdated(updated);
       showStatus('Group renamed successfully');
       setIsEditingName(false);
-    } catch (err) {
+    } catch {
       showStatus('Failed to rename group');
     } finally {
       setIsProcessing(false);
@@ -87,7 +87,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
       onConversationUpdated(updated);
       showStatus(`${user.name} added to group`);
       setSearchQuery('');
-    } catch (err) {
+    } catch {
       showStatus('Failed to add member');
     } finally {
       setIsProcessing(false);
@@ -101,7 +101,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
       const updated = await api.removeParticipant(conversation._id, userId);
       onConversationUpdated(updated);
       showStatus('Member removed');
-    } catch (err) {
+    } catch {
       showStatus('Failed to remove member');
     } finally {
       setIsProcessing(false);
@@ -115,7 +115,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
       const updated = await api.promoteAdmin(conversation._id, { userId });
       onConversationUpdated(updated);
       showStatus('Member promoted to admin');
-    } catch (err) {
+    } catch {
       showStatus('Failed to promote member');
     } finally {
       setIsProcessing(false);
@@ -129,7 +129,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
     try {
       await api.removeParticipant(conversation._id, currentUser._id);
       onLeave();
-    } catch (err) {
+    } catch {
       showStatus('Failed to leave group');
       setIsProcessing(false);
     }
