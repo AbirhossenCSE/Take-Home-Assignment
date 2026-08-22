@@ -3,15 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f172a;
+  --background: #070a12;
   --foreground: #f8fafc;
 }
 
-body {
+html, body {
   color: var(--foreground);
   background: var(--background);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
 @keyframes fadeIn {
@@ -36,12 +37,22 @@ body {
   }
 }
 
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-scale-in {
   animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gradient {
+  animation: gradientShift 6s ease infinite;
 }
 
 /* Custom scrollbar styling */
