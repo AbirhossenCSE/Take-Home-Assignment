@@ -106,8 +106,8 @@ npm run start
 
 ## 🔗 Live Demo Links
 
-- **Chat Application Demo**: `[Chat App Demo]` *(Placeholder - replace with deployed URL)*
-- **Landing Page Demo**: `[Landing Page Demo]` *(Placeholder - replace with deployed URL)*
+- **Chat Application Demo**: [https://cyber-chat-jade.vercel.app/login](https://cyber-chat-jade.vercel.app/login)
+- **Landing Page Demo**: [https://cyber-chat-jade.vercel.app/](https://cyber-chat-jade.vercel.app/)
 
 ---
 
