@@ -8,6 +8,7 @@ import { Conversation, Message } from '@/types';
 import { NewChatModal } from '@/components/NewChatModal';
 import { GroupInfoModal } from '@/components/GroupInfoModal';
 import { ChatPanel } from '@/components/chat/ChatPanel';
+import { getConversationName, getInitial, getSafeName } from '@/lib/utils';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -104,14 +105,12 @@ export default function ChatPage() {
     setIsGroupInfoOpen(false);
   };
 
-  const getConversationName = (conv: Conversation) => {
-    if (conv.type === 'group') return conv.name || 'Unnamed Group';
-    if (!currentUser) return 'Unknown';
-    if (conv.type === 'direct' && conv.participant) {
-      return conv.participant.name;
+  const formatConvName = (conv: Conversation) => {
+    const derivedName = getConversationName(conv, currentUser);
+    if (derivedName === 'Unknown User') {
+      console.warn('Conversation missing display name details:', conv);
     }
-    const otherUser = conv.participants?.find((p) => p._id !== currentUser._id);
-    return otherUser ? otherUser.name : 'Unknown User';
+    return derivedName;
   };
 
   if (!isMounted || !token) {
@@ -146,17 +145,22 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
       {/* LEFT SIDEBAR */}
-      <div className="w-80 flex flex-col border-r border-gray-800 bg-gray-900/95 flex-shrink-0">
+      <div
+        className={`w-full md:w-80 flex flex-col border-r border-gray-800 bg-gray-900/95 flex-shrink-0 ${
+          activeConversation ? 'hidden md:flex' : 'flex'
+        }`}
+      >
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
-              {currentUser?.name?.charAt(0).toUpperCase()}
+              {getInitial(currentUser?.name)}
             </div>
-            <h2 className="font-bold text-lg truncate">{currentUser?.name}</h2>
+            <h2 className="font-bold text-lg truncate">{getSafeName(currentUser?.name)}</h2>
           </div>
           <button
             onClick={() => setIsNewChatOpen(true)}
-            className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition"
+            aria-label="New Chat"
+            className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             title="New Chat"
           >
             <svg
@@ -207,7 +211,7 @@ export default function ChatPage() {
               <p className="text-red-400 text-sm mb-3">{error}</p>
               <button
                 onClick={fetchConversations}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition"
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 Retry
               </button>
@@ -225,18 +229,18 @@ export default function ChatPage() {
             !error &&
             safeConversations.map((conv) => {
               const isActive = activeConversation?._id === conv._id;
-              const name = getConversationName(conv);
+              const name = formatConvName(conv);
 
               return (
                 <button
                   key={conv._id}
                   onClick={() => setActiveConversation(conv)}
-                  className={`w-full text-left p-4 border-b border-gray-800/50 hover:bg-gray-800 transition flex items-center ${
+                  className={`w-full text-left p-4 border-b border-gray-800/50 hover:bg-gray-800 transition flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     isActive ? 'bg-gray-800' : ''
                   }`}
                 >
                   <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center font-bold flex-shrink-0">
-                    {name.charAt(0).toUpperCase()}
+                    {getInitial(name)}
                   </div>
                   <div className="ml-4 flex-1 overflow-hidden">
                     <h3 className="font-semibold text-white truncate">{name}</h3>
@@ -255,7 +259,7 @@ export default function ChatPage() {
               logout();
               router.push('/login');
             }}
-            className="w-full py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition"
+            className="w-full py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Log Out
           </button>
@@ -263,7 +267,11 @@ export default function ChatPage() {
       </div>
 
       {/* RIGHT CHAT PANEL */}
-      <div className="flex-1 flex flex-col bg-gray-900 relative">
+      <div
+        className={`flex-1 flex flex-col bg-gray-900 relative ${
+          activeConversation ? 'flex' : 'hidden md:flex'
+        }`}
+      >
         {activeConversation ? (
           <ChatPanel
             activeConversation={activeConversation}
@@ -271,6 +279,7 @@ export default function ChatPage() {
             onOpenGroupInfo={() => setIsGroupInfoOpen(true)}
             onConversationUpdated={handleConversationUpdated}
             onMessageNew={handleNewMessage}
+            onBack={() => setActiveConversation(null)}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-500">

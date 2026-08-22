@@ -13,6 +13,8 @@ export interface Message {
   sender?: string | User;
   text: string;
   createdAt: string;
+  ephemeralDuration?: number; // In seconds (e.g. 10, 30, 60, 300)
+  expiresAt?: string; // ISO date string when message self-destructs
 }
 
 export interface Conversation {
@@ -64,4 +66,6 @@ export interface UpdateConversationRequest {
 export interface SendMessageRequest {
   conversationId: string;
   text: string;
+  ephemeralDuration?: number;
+  expiresAt?: string;
 }

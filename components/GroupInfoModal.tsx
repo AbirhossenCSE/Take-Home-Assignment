@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Conversation, User } from '@/types';
 import { useAuthStore } from '@/store';
 import { useDebounce } from '@/lib/hooks';
+import { getInitial, getSafeName } from '@/lib/utils';
 
 interface GroupInfoModalProps {
   conversation: Conversation;
@@ -138,8 +139,8 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-700 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-700 flex flex-col max-h-[90vh] animate-scale-in">
         
         {/* Header */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
@@ -233,9 +234,9 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
                           className="w-full flex items-center p-2 hover:bg-gray-700 rounded transition text-left"
                         >
                           <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white font-bold mr-2">
-                            {user.name.charAt(0).toUpperCase()}
+                            {getInitial(user.name || user.phone)}
                           </div>
-                          <span className="text-sm text-gray-200">{user.name}</span>
+                          <span className="text-sm text-gray-200">{getSafeName(user.name, user.phone)}</span>
                         </button>
                       );
                     })}
@@ -253,11 +254,11 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
                   <div key={user._id} className="flex items-center justify-between p-2 hover:bg-gray-700/50 rounded-lg group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-white">
-                        {user.name.charAt(0).toUpperCase()}
+                        {getInitial(user.name || user.phone)}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">
-                          {user.name} {isMe && <span className="text-gray-500">(You)</span>}
+                          {getSafeName(user.name, user.phone)} {isMe && <span className="text-gray-500">(You)</span>}
                         </p>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { getConversationName, getInitial } from '@/lib/utils';
 
 interface ChatPanelProps {
   activeConversation: Conversation;
@@ -11,6 +12,7 @@ interface ChatPanelProps {
   onOpenGroupInfo?: () => void;
   onConversationUpdated?: (updated: Conversation) => void;
   onMessageNew?: (message: Message) => void;
+  onBack?: () => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -19,6 +21,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onOpenGroupInfo,
   onConversationUpdated,
   onMessageNew,
+  onBack,
 }) => {
   const { socket, isConnected, isReconnecting } = useSocket();
   
@@ -115,8 +118,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [socket, activeConversation._id, currentUser?._id, onMessageNew, onConversationUpdated]);
 
   // Send message handler (socket with REST fallback + optimistic UI)
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, ephemeralDuration?: number) => {
     if (!activeConversation || !currentUser) return;
+
+    const createdAt = new Date().toISOString();
+    const expiresAt = ephemeralDuration
+      ? new Date(Date.now() + ephemeralDuration * 1000).toISOString()
+      : undefined;
 
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
     const optimisticMessage: Message = {
@@ -125,7 +133,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       senderId: currentUser._id,
       sender: currentUser,
       text,
-      createdAt: new Date().toISOString(),
+      createdAt,
+      ephemeralDuration,
+      expiresAt,
     };
 
     // Optimistically update UI
@@ -136,11 +146,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       onMessageNew(optimisticMessage);
     }
 
+    const payload = {
+      conversationId: activeConversation._id,
+      text,
+      ephemeralDuration,
+      expiresAt,
+    };
+
     // Attempt Socket.io send if connected
     if (socket && socket.connected) {
       socket.emit(
         'message:send',
-        { conversationId: activeConversation._id, text },
+        payload,
         (response: Message | { data?: Message; message?: Message } | null) => {
           let realMsg: Message | null = null;
           if (response && '_id' in response && response._id) {
@@ -152,37 +169,38 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           }
 
           if (realMsg) {
-            reconcileMessage(tempId, realMsg);
-            if (onMessageNew) onMessageNew(realMsg);
+            const mergedRealMsg: Message = {
+              ...realMsg,
+              ephemeralDuration: realMsg.ephemeralDuration || ephemeralDuration,
+              expiresAt: realMsg.expiresAt || expiresAt,
+            };
+            reconcileMessage(tempId, mergedRealMsg);
+            if (onMessageNew) onMessageNew(mergedRealMsg);
           }
         }
       );
     } else {
       // REST API fallback if socket is disconnected
       try {
-        const realMsg = await api.sendMessage({
-          conversationId: activeConversation._id,
-          text,
-        });
-        reconcileMessage(tempId, realMsg);
-        if (onMessageNew) onMessageNew(realMsg);
+        const realMsg = await api.sendMessage(payload);
+        const mergedRealMsg: Message = {
+          ...realMsg,
+          ephemeralDuration: realMsg.ephemeralDuration || ephemeralDuration,
+          expiresAt: realMsg.expiresAt || expiresAt,
+        };
+        reconcileMessage(tempId, mergedRealMsg);
+        if (onMessageNew) onMessageNew(mergedRealMsg);
       } catch (err: unknown) {
         console.error('Failed to send message via REST fallback:', err);
       }
     }
   };
 
-  const getConversationName = (conv: Conversation) => {
-    if (conv.type === 'group') return conv.name || 'Unnamed Group';
-    if (!currentUser) return 'Unknown';
-    if (conv.type === 'direct' && conv.participant) {
-      return conv.participant.name;
-    }
-    const otherUser = conv.participants?.find((p) => p._id !== currentUser._id);
-    return otherUser ? otherUser.name : 'Unknown User';
-  };
+  const handleExpireMessage = useCallback((messageId: string) => {
+    setMessages((prev) => prev.filter((m) => m._id !== messageId));
+  }, []);
 
-  const conversationName = getConversationName(activeConversation);
+  const conversationName = getConversationName(activeConversation, currentUser);
   const isGroup = activeConversation.type === 'group';
 
   return (
@@ -201,11 +219,34 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/95 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              aria-label="Back to conversation list"
+              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Back to conversations"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          )}
           <div className="w-10 h-10 rounded-full bg-blue-600/30 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-lg flex-shrink-0">
-            {conversationName.charAt(0).toUpperCase()}
+            {getInitial(conversationName)}
           </div>
           <div>
-            <h2 className="font-semibold text-lg text-white truncate max-w-[200px] sm:max-w-md">
+            <h2 className="font-semibold text-lg text-white truncate max-w-[180px] sm:max-w-md">
               {conversationName}
             </h2>
             {isGroup && (
@@ -219,7 +260,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         {isGroup && onOpenGroupInfo && (
           <button
             onClick={onOpenGroupInfo}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition"
+            aria-label="Group Information"
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             title="Group Info"
           >
             <svg
@@ -250,6 +292,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         error={error}
         onRetry={fetchMessages}
         conversationId={activeConversation._id}
+        onExpireMessage={handleExpireMessage}
       />
 
       {/* Message Input */}

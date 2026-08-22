@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Message, User } from '@/types';
+import { getSafeName } from '@/lib/utils';
 
 interface MessageItemProps {
   message: Message;
   isCurrentUser: boolean;
   isGroup: boolean;
   participants?: User[];
+  onExpire?: (messageId: string) => void;
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({
@@ -14,7 +16,48 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   isCurrentUser,
   isGroup,
   participants,
+  onExpire,
 }) => {
+  // Calculate remaining seconds for self-destructing messages
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(() => {
+    if (message.expiresAt) {
+      const expTime = new Date(message.expiresAt).getTime();
+      return Math.max(0, Math.ceil((expTime - Date.now()) / 1000));
+    }
+    if (message.ephemeralDuration && message.ephemeralDuration > 0) {
+      const createTime = new Date(message.createdAt).getTime();
+      const expTime = createTime + message.ephemeralDuration * 1000;
+      return Math.max(0, Math.ceil((expTime - Date.now()) / 1000));
+    }
+    return null;
+  });
+
+  const [isFadingOut, setIsFadingOut] = useState(false);
+
+  useEffect(() => {
+    if (secondsLeft === null) return;
+
+    if (secondsLeft <= 0) {
+      setIsFadingOut(true);
+      const timer = setTimeout(() => {
+        if (onExpire) onExpire(message._id);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [secondsLeft, message._id, onExpire]);
+
   // Format timestamp (e.g., "2:45 PM")
   const formatTime = (dateStr: string) => {
     try {
@@ -26,18 +69,30 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     }
   };
 
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   // Determine sender name for received messages in group chats
   const getSenderName = () => {
     if (!isGroup || isCurrentUser) return null;
 
-    if (typeof message.sender === 'object' && message.sender?.name) {
-      return message.sender.name;
+    if (typeof message.sender === 'object' && message.sender) {
+      if (message.sender.name?.trim()) return message.sender.name.trim();
+      if (message.sender.phone?.trim()) return message.sender.phone.trim();
     }
 
-    const senderId = message.senderId || (typeof message.sender === 'string' ? message.sender : null);
+    const senderId =
+      message.senderId ||
+      (typeof message.sender === 'string' ? message.sender : null);
+
     if (senderId && participants) {
-      const found = participants.find((p) => p._id === senderId);
-      if (found) return found.name;
+      const found = participants.find((p) => p && p._id === senderId);
+      if (found) {
+        return getSafeName(found.name, found.phone || 'Member');
+      }
     }
 
     return 'Member';
@@ -48,9 +103,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
   return (
     <div
-      className={`flex flex-col my-1 select-text ${
-        isCurrentUser ? 'items-end' : 'items-start'
-      }`}
+      className={`flex flex-col my-1 select-text transition-all duration-300 ${
+        isFadingOut ? 'opacity-0 scale-95 -translate-y-2' : 'animate-fade-in'
+      } ${isCurrentUser ? 'items-end' : 'items-start'}`}
     >
       <div
         className={`max-w-[75%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl transition-all ${
@@ -71,12 +126,34 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           {message.text}
         </p>
 
-        {/* Footer: Time + Sending Status */}
+        {/* Footer: Time + Self-destruct Countdown + Sending Status */}
         <div
-          className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
+          className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${
             isCurrentUser ? 'text-blue-200' : 'text-gray-400'
           }`}
         >
+          {secondsLeft !== null && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30"
+              title="Self-destruct countdown"
+            >
+              <svg
+                className="w-2.5 h-2.5 text-amber-400 animate-spin"
+                style={{ animationDuration: '3s' }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{formatCountdown(secondsLeft)}</span>
+            </span>
+          )}
           <span>{formatTime(message.createdAt)}</span>
           {isCurrentUser && isOptimistic && (
             <svg

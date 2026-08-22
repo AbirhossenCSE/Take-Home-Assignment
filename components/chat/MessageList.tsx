@@ -11,6 +11,7 @@ interface MessageListProps {
   error: string;
   onRetry: () => void;
   conversationId: string;
+  onExpireMessage?: (messageId: string) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -22,6 +23,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   error,
   onRetry,
   conversationId,
+  onExpireMessage,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -204,6 +206,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                 isCurrentUser={isCurrentUser}
                 isGroup={isGroup}
                 participants={participants}
+                onExpire={onExpireMessage}
               />
             </React.Fragment>
           );

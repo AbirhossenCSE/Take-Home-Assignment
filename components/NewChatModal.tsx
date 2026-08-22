@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { User, Conversation } from '@/types';
 import { useDebounce } from '@/lib/hooks';
+import { getInitial, getSafeName } from '@/lib/utils';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -113,8 +114,8 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-700 flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-700 flex flex-col max-h-[80vh] animate-scale-in">
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">New Chat</h2>
           <button 
@@ -226,10 +227,10 @@ export function NewChatModal({ isOpen, onClose, onConversationCreated }: NewChat
                   className="w-full flex items-center p-3 hover:bg-gray-700 rounded-lg transition disabled:opacity-50 text-left"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                    {user.name.charAt(0).toUpperCase()}
+                    {getInitial(user.name || user.phone)}
                   </div>
                   <div className="ml-3 flex-1 overflow-hidden">
-                    <p className="text-white font-medium truncate">{user.name}</p>
+                    <p className="text-white font-medium truncate">{getSafeName(user.name, user.phone)}</p>
                     <p className="text-gray-400 text-sm truncate">{user.phone}</p>
                   </div>
                   {mode === 'group' && (
