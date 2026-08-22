@@ -139,14 +139,17 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-700 flex flex-col max-h-[90vh] animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] animate-scale-in">
         
         {/* Header */}
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Group Info</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+          <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span>GROUP CHANNEL DETAILS</span>
+          </h2>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg transition">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -154,7 +157,7 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
 
         {/* Status Message */}
         {statusMessage && (
-          <div className="px-4 py-2 bg-blue-900/50 text-blue-200 text-sm text-center border-b border-blue-800/50">
+          <div className="px-4 py-2 bg-cyan-950/80 text-cyan-300 text-xs font-mono text-center border-b border-cyan-500/30">
             {statusMessage}
           </div>
         )}
@@ -163,28 +166,28 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
           
           {/* Group Name Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Group Name</label>
+            <label className="block text-xs font-mono text-cyan-400 mb-1.5 uppercase">Channel Name</label>
             {isEditingName ? (
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500"
                   autoFocus
                 />
-                <button onClick={handleRename} disabled={isProcessing} className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium disabled:opacity-50">
+                <button onClick={handleRename} disabled={isProcessing} className="px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs font-mono disabled:opacity-50 transition">
                   Save
                 </button>
-                <button onClick={() => { setIsEditingName(false); setNewName(conversation.name || ''); }} className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium">
+                <button onClick={() => { setIsEditingName(false); setNewName(conversation.name || ''); }} className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-mono transition">
                   Cancel
                 </button>
               </div>
             ) : (
-              <div className="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg border border-gray-700">
-                <span className="text-lg text-white font-medium">{conversation.name || 'Unnamed Group'}</span>
+              <div className="flex items-center justify-between bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                <span className="text-base text-white font-semibold">{conversation.name || 'Unnamed Group'}</span>
                 {isAdmin && (
-                  <button onClick={() => setIsEditingName(true)} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                  <button onClick={() => setIsEditingName(true)} className="text-cyan-400 hover:text-cyan-300 text-xs font-mono">
                     Edit
                   </button>
                 )}
@@ -195,30 +198,30 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
           {/* Members List */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm font-medium text-gray-400">Members ({conversation.participants?.length || 0})</label>
+              <label className="block text-xs font-mono text-cyan-400 uppercase">Members ({conversation.participants?.length || 0})</label>
               {isAdmin && !isAddingMembers && (
-                <button onClick={() => setIsAddingMembers(true)} className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1">
+                <button onClick={() => setIsAddingMembers(true)} className="text-cyan-400 hover:text-cyan-300 text-xs font-mono flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Add
+                  Add Member
                 </button>
               )}
             </div>
 
             {/* Add Member UI */}
             {isAddingMembers && (
-              <div className="mb-4 p-3 bg-gray-700/30 border border-gray-700 rounded-lg">
+              <div className="mb-4 p-3 bg-slate-950/60 border border-slate-800 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-300">Add new member</span>
-                  <button onClick={() => { setIsAddingMembers(false); setSearchQuery(''); }} className="text-gray-500 hover:text-gray-300 text-sm">Cancel</button>
+                  <span className="text-xs font-mono text-slate-300">SEARCH MEMBER TO ADD</span>
+                  <button onClick={() => { setIsAddingMembers(false); setSearchQuery(''); }} className="text-slate-500 hover:text-slate-300 text-xs">Cancel</button>
                 </div>
                 <input
                   type="text"
-                  placeholder="Search to add..."
+                  placeholder="Search by name or phone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none mb-2"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500 mb-2"
                 />
                 
                 {searchResults.length > 0 && (
@@ -231,12 +234,12 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
                           key={user._id}
                           onClick={() => handleAddMember(user)}
                           disabled={isProcessing}
-                          className="w-full flex items-center p-2 hover:bg-gray-700 rounded transition text-left"
+                          className="w-full flex items-center p-2 hover:bg-slate-800/80 rounded-lg transition text-left"
                         >
-                          <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white font-bold mr-2">
+                          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-400/30 flex items-center justify-center text-xs text-white font-bold mr-2">
                             {getInitial(user.name || user.phone)}
                           </div>
-                          <span className="text-sm text-gray-200">{getSafeName(user.name, user.phone)}</span>
+                          <span className="text-xs text-slate-200">{getSafeName(user.name, user.phone)}</span>
                         </button>
                       );
                     })}
@@ -251,33 +254,33 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
                 const isMe = currentUser?._id === user._id;
 
                 return (
-                  <div key={user._id} className="flex items-center justify-between p-2 hover:bg-gray-700/50 rounded-lg group">
+                  <div key={user._id} className="flex items-center justify-between p-2.5 hover:bg-slate-800/50 rounded-xl transition group border border-transparent hover:border-slate-800">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-white">
+                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-bold text-cyan-400">
                         {getInitial(user.name || user.phone)}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">
-                          {getSafeName(user.name, user.phone)} {isMe && <span className="text-gray-500">(You)</span>}
+                          {getSafeName(user.name, user.phone)} {isMe && <span className="text-slate-500 text-xs font-mono">(You)</span>}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       {isUserAdmin && (
-                        <span className="px-2 py-0.5 bg-blue-900/50 text-blue-300 text-xs rounded border border-blue-800/50">Admin</span>
+                        <span className="px-2 py-0.5 bg-cyan-950 text-cyan-400 text-[10px] font-mono rounded border border-cyan-500/30">ADMIN</span>
                       )}
                       
                       {isAdmin && !isMe && (
                         <div className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
                           {!isUserAdmin && (
-                            <button onClick={() => handlePromoteAdmin(user._id)} disabled={isProcessing} className="p-1 text-gray-400 hover:text-blue-400" title="Promote to Admin">
+                            <button onClick={() => handlePromoteAdmin(user._id)} disabled={isProcessing} className="p-1 text-slate-400 hover:text-cyan-400" title="Promote to Admin">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                               </svg>
                             </button>
                           )}
-                          <button onClick={() => handleRemoveMember(user._id)} disabled={isProcessing} className="p-1 text-gray-400 hover:text-red-400" title="Remove Member">
+                          <button onClick={() => handleRemoveMember(user._id)} disabled={isProcessing} className="p-1 text-slate-400 hover:text-rose-400" title="Remove Member">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -293,14 +296,14 @@ export function GroupInfoModal({ conversation, isOpen, onClose, onConversationUp
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700 bg-gray-900/50 flex justify-end">
+        <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
           {!isAdmin && (
             <button
               onClick={handleLeaveGroup}
               disabled={isProcessing}
-              className="w-full px-4 py-2 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-600/20 rounded-lg transition font-medium disabled:opacity-50"
+              className="w-full px-4 py-2.5 bg-rose-950/20 text-rose-400 hover:bg-rose-900/40 border border-rose-900/40 rounded-xl transition text-xs font-mono disabled:opacity-50"
             >
-              Leave Group
+              LEAVE GROUP CHANNEL
             </button>
           )}
         </div>

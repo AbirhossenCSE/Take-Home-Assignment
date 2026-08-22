@@ -28,7 +28,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
-  
+
   const prevConvIdRef = useRef<string>(conversationId);
   const prevMessagesCountRef = useRef<number>(messages.length);
 
@@ -68,7 +68,6 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (convChanged) {
       prevConvIdRef.current = conversationId;
       prevMessagesCountRef.current = messages.length;
-      // Scroll to bottom immediately on chat change
       setTimeout(() => scrollToBottom(false), 50);
       return;
     }
@@ -100,16 +99,16 @@ export const MessageList: React.FC<MessageListProps> = ({
     return (
       <div className="flex-1 p-4 space-y-4 overflow-y-auto animate-pulse">
         <div className="flex justify-start">
-          <div className="w-48 h-12 bg-gray-800 rounded-2xl rounded-bl-none"></div>
+          <div className="w-48 h-12 bg-slate-900/60 rounded-2xl rounded-bl-none border border-slate-800/60"></div>
         </div>
         <div className="flex justify-end">
-          <div className="w-56 h-10 bg-blue-950/60 rounded-2xl rounded-br-none"></div>
+          <div className="w-56 h-10 bg-cyan-950/40 rounded-2xl rounded-br-none border border-cyan-500/20"></div>
         </div>
         <div className="flex justify-start">
-          <div className="w-64 h-16 bg-gray-800 rounded-2xl rounded-bl-none"></div>
+          <div className="w-64 h-16 bg-slate-900/60 rounded-2xl rounded-bl-none border border-slate-800/60"></div>
         </div>
         <div className="flex justify-end">
-          <div className="w-40 h-10 bg-blue-950/60 rounded-2xl rounded-br-none"></div>
+          <div className="w-40 h-10 bg-cyan-950/40 rounded-2xl rounded-br-none border border-cyan-500/20"></div>
         </div>
       </div>
     );
@@ -119,7 +118,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   if (error) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-full bg-red-900/30 text-red-400 flex items-center justify-center mb-3">
+        <div className="w-12 h-12 rounded-xl bg-rose-950/40 text-rose-400 border border-rose-900/40 flex items-center justify-center mb-3">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"
@@ -135,13 +134,13 @@ export const MessageList: React.FC<MessageListProps> = ({
             />
           </svg>
         </div>
-        <p className="text-gray-300 font-medium mb-1">Failed to load messages</p>
-        <p className="text-gray-500 text-sm mb-4">{error}</p>
+        <p className="text-slate-300 font-medium mb-1">Failed to load messages</p>
+        <p className="text-slate-500 text-xs font-mono mb-4">{error}</p>
         <button
           onClick={onRetry}
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition"
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 text-xs font-mono rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
         >
-          Try Again
+          RETRY LOAD
         </button>
       </div>
     );
@@ -150,11 +149,11 @@ export const MessageList: React.FC<MessageListProps> = ({
   // Empty state
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-gray-500">
-        <div className="w-16 h-16 rounded-full bg-gray-800/60 flex items-center justify-center mb-3">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500">
+        <div className="w-16 h-16 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mb-3 text-cyan-400">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-gray-400"
+            className="h-8 w-8"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -167,8 +166,8 @@ export const MessageList: React.FC<MessageListProps> = ({
             />
           </svg>
         </div>
-        <p className="font-semibold text-gray-300">No messages yet — say hi!</p>
-        <p className="text-xs text-gray-500 mt-1">Start the conversation below.</p>
+        <p className="font-bold text-slate-200">No messages yet — say hi!</p>
+        <p className="text-xs text-slate-500 mt-1">Start the conversation below.</p>
       </div>
     );
   }
@@ -196,7 +195,7 @@ export const MessageList: React.FC<MessageListProps> = ({
             <React.Fragment key={message._id}>
               {showDateHeader && (
                 <div className="flex items-center justify-center my-4">
-                  <div className="bg-gray-800/80 backdrop-blur text-gray-400 text-xs px-3 py-1 rounded-full border border-gray-700/50 shadow-sm font-medium">
+                  <div className="bg-slate-900/90 backdrop-blur-md text-slate-400 text-xs px-3.5 py-1 rounded-full border border-slate-800 shadow-sm font-mono tracking-wider font-medium">
                     {currentDateLabel}
                   </div>
                 </div>
@@ -217,13 +216,13 @@ export const MessageList: React.FC<MessageListProps> = ({
       {showScrollBottom && (
         <button
           onClick={() => scrollToBottom(true)}
-          className={`absolute bottom-4 right-6 px-4 py-2 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 ${
+          className={`absolute bottom-4 right-6 px-4 py-2 rounded-full shadow-xl text-xs font-semibold flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 ${
             hasNewMessage
-              ? 'bg-blue-600 hover:bg-blue-500 text-white animate-bounce'
-              : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_25px_rgba(6,182,212,0.4)] animate-bounce'
+              : 'bg-slate-900/90 text-slate-200 border border-slate-800 backdrop-blur-md'
           }`}
         >
-          <span>{hasNewMessage ? 'New message' : 'Scroll to bottom'}</span>
+          <span>{hasNewMessage ? 'New message ↓' : 'Scroll to bottom'}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4"

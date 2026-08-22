@@ -55,8 +55,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const activeOption = TIMER_OPTIONS.find((opt) => opt.value === ephemeralDuration) || TIMER_OPTIONS[0];
 
   return (
-    <div className="p-3 sm:p-4 bg-gray-900 border-t border-gray-800">
-      <div className="flex items-end gap-2 bg-gray-800/80 rounded-2xl p-2 border border-gray-700/60 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/50 transition-all">
+    <div className="p-3 sm:p-4 bg-[#070A12] border-t border-slate-800/80">
+      <div className="flex items-end gap-2 bg-slate-900/80 rounded-2xl p-2 border border-slate-800 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/40 backdrop-blur-md transition-all">
         {/* Timer Selector Popover */}
         <div className="relative" ref={menuRef}>
           <button
@@ -69,10 +69,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 ? `Self-destruct after ${activeOption.label}`
                 : 'Set self-destruct timer'
             }
-            className={`p-2 rounded-xl transition-all flex items-center gap-1 font-medium text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+            className={`p-2 rounded-xl transition-all flex items-center gap-1 font-mono font-medium text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
               ephemeralDuration > 0
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800/80 border border-transparent'
             }`}
           >
             <svg
@@ -93,9 +93,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           </button>
 
           {isTimerMenuOpen && (
-            <div className="absolute bottom-12 left-0 mb-2 w-44 bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-1.5 z-30 animate-scale-in">
-              <div className="px-2 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-700/50 mb-1">
-                Self-destruct timer
+            <div className="absolute bottom-12 left-0 mb-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 z-30 animate-scale-in backdrop-blur-xl">
+              <div className="px-2 py-1 text-[10px] font-mono font-semibold text-cyan-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                SELF-DESTRUCT TIMER
               </div>
               {TIMER_OPTIONS.map((option) => (
                 <button
@@ -105,10 +105,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     setEphemeralDuration(option.value);
                     setIsTimerMenuOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 text-xs rounded-lg flex items-center justify-between transition ${
+                  className={`w-full text-left px-3 py-1.5 text-xs font-mono rounded-lg flex items-center justify-between transition ${
                     ephemeralDuration === option.value
-                      ? 'bg-amber-500/20 text-amber-300 font-semibold'
-                      : 'text-gray-300 hover:bg-gray-700'
+                      ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30'
+                      : 'text-slate-300 hover:bg-slate-800/80'
                   }`}
                 >
                   <span>{option.label}</span>
@@ -135,7 +135,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           disabled={disabled}
           aria-label="Message text"
           rows={1}
-          className="flex-1 bg-transparent text-white placeholder-gray-400 text-sm focus:outline-none resize-none max-h-32 min-h-[40px] py-2 px-3 leading-relaxed"
+          className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none resize-none max-h-32 min-h-[40px] py-2 px-3 leading-relaxed"
         />
 
         {/* Send Button */}
@@ -143,12 +143,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onClick={handleSend}
           disabled={isSendDisabled}
           aria-label="Send message"
-          className={`p-2.5 rounded-xl transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+          className={`p-2.5 rounded-xl transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${
             isSendDisabled
-              ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+              ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed border border-slate-800/50'
               : ephemeralDuration > 0
-              ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md active:scale-95'
-              : 'bg-blue-600 hover:bg-blue-500 text-white shadow-md active:scale-95'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] text-slate-950 font-bold active:scale-95'
+              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] text-white font-bold active:scale-95'
           }`}
           title="Send Message"
         >

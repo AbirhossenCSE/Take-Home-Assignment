@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store';
 import { AxiosError } from 'axios';
@@ -52,14 +53,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-xl shadow-lg p-8">
-        <h2 className="text-3xl font-bold text-white text-center mb-6">Welcome Back</h2>
+    <div className="flex min-h-screen items-center justify-center bg-[#070A12] px-4 font-sans relative overflow-hidden selection:bg-cyan-500 selection:text-slate-950">
+      {/* Background Cyber Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 pointer-events-none" />
+
+      {/* Glow gradient */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/20 via-blue-600/10 to-amber-500/10 blur-[100px] pointer-events-none rounded-full" />
+
+      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 backdrop-blur-2xl rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] p-8 relative z-10 animate-scale-in">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 p-[1px] shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+              <div className="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
+                <svg
+                  className="w-4 h-4 text-cyan-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <span className="font-extrabold text-lg tracking-wider text-white font-mono">
+              CYBER<span className="text-cyan-400">CHAT</span>
+            </span>
+          </Link>
+          <h2 className="text-2xl font-bold text-white">Access Real-Time Portal</h2>
+          <p className="text-slate-400 text-xs mt-1">Enter your details to initiate or join encrypted chats.</p>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Name
+            <label htmlFor="name" className="block text-xs font-mono text-cyan-400 uppercase mb-1.5">
+              User Display Name
             </label>
             <input
               id="name"
@@ -67,14 +99,14 @@ export default function LoginPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              placeholder="Enter your name"
+              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+              placeholder="e.g. Alex"
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-              Phone Number
+            <label htmlFor="phone" className="block text-xs font-mono text-cyan-400 uppercase mb-1.5">
+              Phone Number Identifier
             </label>
             <input
               id="phone"
@@ -82,21 +114,21 @@ export default function LoginPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition font-mono"
               placeholder="+1 (555) 000-0000"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-lg">
-              <p className="text-sm text-red-200 text-center">{error}</p>
+            <div className="p-3 bg-rose-950/40 border border-rose-900/40 rounded-xl">
+              <p className="text-xs text-rose-300 font-mono text-center">{error}</p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex justify-center items-center"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] text-white font-extrabold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center items-center gap-2"
           >
             {isLoading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -104,7 +136,12 @@ export default function LoginPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              'Log In'
+              <>
+                <span>Connect Session</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
             )}
           </button>
         </form>

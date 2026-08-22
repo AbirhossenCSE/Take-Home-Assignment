@@ -53,12 +53,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   // Helper to reconcile optimistic temp message with real message from server
   const reconcileMessage = useCallback((tempId: string, realMsg: Message) => {
     setMessages((prev) => {
-      // Check if real message was already added (e.g., via socket event)
       const existsIndex = prev.findIndex((m) => m._id === realMsg._id);
       if (existsIndex !== -1) {
         return prev.filter((m) => m._id !== tempId);
       }
-      // Replace optimistic message with real message
       return prev.map((m) => (m._id === tempId ? realMsg : m));
     });
   }, []);
@@ -68,20 +66,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     if (!socket) return;
 
     const handleNewMessage = (newMsg: Message) => {
-      // Notify parent for sidebar updates
       if (onMessageNew) {
         onMessageNew(newMsg);
       }
 
-      // If message is for current conversation
       if (newMsg.conversationId === activeConversation._id) {
         setMessages((prev) => {
-          // Prevent duplicates if already present
           if (prev.some((m) => m._id === newMsg._id)) {
             return prev;
           }
 
-          // Check if there is a pending optimistic message matching text and sender
           const pendingOptIndex = prev.findIndex(
             (m) =>
               m._id.startsWith('temp-') &&
@@ -141,7 +135,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     // Optimistically update UI
     setMessages((prev) => [...prev, optimisticMessage]);
 
-    // Also update parent sidebar preview optimistically
     if (onMessageNew) {
       onMessageNew(optimisticMessage);
     }
@@ -153,7 +146,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       expiresAt,
     };
 
-    // Attempt Socket.io send if connected
     if (socket && socket.connected) {
       socket.emit(
         'message:send',
@@ -180,7 +172,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         }
       );
     } else {
-      // REST API fallback if socket is disconnected
       try {
         const realMsg = await api.sendMessage(payload);
         const mergedRealMsg: Message = {
@@ -204,26 +195,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const isGroup = activeConversation.type === 'group';
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-900 overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-[#070A12] overflow-hidden relative">
       {/* Reconnecting / Offline Banner */}
       {!isConnected && (
-        <div className="bg-amber-600/90 text-white text-xs px-4 py-1.5 text-center flex items-center justify-center gap-2 font-medium z-10 transition-all">
-          <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div className="bg-amber-500/20 text-amber-300 border-b border-amber-500/40 text-xs px-4 py-2 text-center flex items-center justify-center gap-2 font-mono font-medium z-20 backdrop-blur-md animate-fade-in">
+          <svg className="animate-spin h-3.5 w-3.5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <span>{isReconnecting ? 'Reconnecting to server...' : 'Connection offline — messages will send via fallback.'}</span>
+          <span>{isReconnecting ? 'RECONNECTING SOCKET...' : 'OFFLINE MODE — REST FALLBACK ACTIVE'}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/95 backdrop-blur-sm z-10">
+      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between bg-[#070A12]/80 backdrop-blur-xl z-10 shadow-sm">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
               aria-label="Back to conversation list"
-              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="md:hidden p-2 -ml-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
               title="Back to conversations"
             >
               <svg
@@ -242,16 +233,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               </svg>
             </button>
           )}
-          <div className="w-10 h-10 rounded-full bg-blue-600/30 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-lg flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-400/30 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
             {getInitial(conversationName)}
           </div>
           <div>
-            <h2 className="font-semibold text-lg text-white truncate max-w-[180px] sm:max-w-md">
-              {conversationName}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-base sm:text-lg text-white truncate max-w-[180px] sm:max-w-md">
+                {conversationName}
+              </h2>
+              <span
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-ping'
+                }`}
+                title={isConnected ? 'Socket Connected' : 'Connecting Socket...'}
+              />
+            </div>
             {isGroup && (
-              <p className="text-xs text-gray-400">
-                {activeConversation.participants?.length || 0} members
+              <p className="text-xs font-mono text-cyan-400">
+                {activeConversation.participants?.length || 0} MEMBERS
               </p>
             )}
           </div>
@@ -261,7 +260,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           <button
             onClick={onOpenGroupInfo}
             aria-label="Group Information"
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/80 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 border border-transparent hover:border-slate-700/60"
             title="Group Info"
           >
             <svg

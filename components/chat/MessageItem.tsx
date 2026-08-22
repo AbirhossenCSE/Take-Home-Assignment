@@ -103,20 +103,20 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
   return (
     <div
-      className={`flex flex-col my-1 select-text transition-all duration-300 ${
+      className={`flex flex-col my-1.5 select-text transition-all duration-300 ${
         isFadingOut ? 'opacity-0 scale-95 -translate-y-2' : 'animate-fade-in'
       } ${isCurrentUser ? 'items-end' : 'items-start'}`}
     >
       <div
-        className={`max-w-[75%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl transition-all ${
+        className={`max-w-[78%] sm:max-w-[65%] px-4 py-3 rounded-2xl transition-all ${
           isCurrentUser
-            ? 'bg-blue-600 text-white rounded-br-xs shadow-md'
-            : 'bg-gray-800 text-gray-100 rounded-bl-xs border border-gray-700/50 shadow-sm'
+            ? 'bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 text-white rounded-br-xs shadow-[0_0_20px_rgba(6,182,212,0.25)] border border-cyan-400/30'
+            : 'bg-slate-900/80 backdrop-blur-md text-slate-100 rounded-bl-xs border border-slate-800 shadow-md'
         } ${isOptimistic ? 'opacity-70' : 'opacity-100'}`}
       >
         {/* Group Sender Name */}
         {!isCurrentUser && isGroup && senderName && (
-          <p className="text-xs font-semibold text-blue-400 mb-1">
+          <p className="text-xs font-semibold text-cyan-400 mb-1 font-mono">
             {senderName}
           </p>
         )}
@@ -128,13 +128,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
         {/* Footer: Time + Self-destruct Countdown + Sending Status */}
         <div
-          className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${
-            isCurrentUser ? 'text-blue-200' : 'text-gray-400'
+          className={`flex items-center justify-end gap-1.5 mt-1.5 text-[10px] ${
+            isCurrentUser ? 'text-cyan-200 font-medium' : 'text-slate-400 font-medium'
           }`}
         >
           {secondsLeft !== null && (
             <span
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
               title="Self-destruct countdown"
             >
               <svg
@@ -157,7 +157,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           <span>{formatTime(message.createdAt)}</span>
           {isCurrentUser && isOptimistic && (
             <svg
-              className="w-3 h-3 animate-spin"
+              className="w-3 h-3 animate-spin text-cyan-200"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
